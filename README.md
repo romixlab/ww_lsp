@@ -92,17 +92,29 @@ display-inlay-hints = true
 
 ### Zed
 
-Zed starts only language servers that an extension registers, so ww_lsp needs a small Zed extension first (FEATURES.md LSP-7). With it installed, `settings.json`:
+Zed starts only language servers that an extension registers, so ww_lsp comes with a small extension in `editors/zed`. It is not in Zed's extension registry. On Linux:
+
+```sh
+just install-zed
+```
+
+Elsewhere, run `zed: install dev extension` from the command palette and pick `editors/zed` (it needs Rust through rustup).
+
+The extension runs `ww_lsp serve` from PATH, beside rust-analyzer, without further settings. Inlay hints have to be on, in `settings.json`:
 
 ```json
 {
-  "languages": {
-    "Rust": { "language_servers": ["rust-analyzer", "ww_lsp", "..."] }
-  },
-  "lsp": {
-    "ww_lsp": { "binary": { "path": "ww_lsp", "arguments": ["serve"] } }
-  },
   "inlay_hints": { "enabled": true }
+}
+```
+
+Only for a binary that is not on PATH:
+
+```json
+{
+  "lsp": {
+    "ww_lsp": { "binary": { "path": "/path/to/ww_lsp", "arguments": ["serve"] } }
+  }
 }
 ```
 

@@ -1,0 +1,17 @@
+# The Zed extension (FEATURES.md LSP-7). A workspace of its own: it only builds for wasm32-wasip2, so the root
+# workspace's native builds and tests leave it out.
+[workspace]
+
+[package]
+name = "ww_lsp_zed"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+publish = false
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+# Keep in step with `[lib] version` in extension.toml
+zed_extension_api = { version = "0.7.0", default-features = false }

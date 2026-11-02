@@ -18,12 +18,21 @@ test-all:
 lint:
     cargo clippy --workspace --all-targets -- -D warnings
     cargo fmt --all --check
+    cargo fmt --manifest-path editors/zed/Cargo.toml --check
     cargo machete
 
 # Build with the deploy profile and put ww_lsp on PATH through the kept-releases stack (tpm install)
 install:
     cargo build --profile deploy --locked -p ww_lsp
     if command -v tpm >/dev/null; then tpm install target/deploy/ww_lsp; else cargo install --locked --path crates/ww_lsp; fi
+
+# Build the Zed extension and put it among Zed's installed ones (Linux); a running Zed picks it up by itself
+install-zed:
+    rustup target add wasm32-wasip2
+    cargo build --manifest-path editors/zed/Cargo.toml --release --locked --target wasm32-wasip2
+    mkdir -p {{data_directory()}}/zed/extensions/installed/ww-lsp
+    cp editors/zed/extension.toml {{data_directory()}}/zed/extensions/installed/ww-lsp/
+    cp editors/zed/target/wasm32-wasip2/release/ww_lsp_zed.wasm {{data_directory()}}/zed/extensions/installed/ww-lsp/extension.wasm
 
 # Bring this PC up to main: pull, install, check --version against main
 deploy:

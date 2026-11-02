@@ -1,0 +1,15 @@
+id = "ww-lsp"
+name = "ww_lsp"
+version = "0.1.0"
+schema_version = 1
+description = "exact_units types of WireWeaver APIs as inlay hints and hover, beside rust-analyzer"
+repository = "https://github.com/romixlab/ww_lsp"
+authors = ["Roman Isaikin <romix.lab@gmail.com>"]
+
+[lib]
+kind = "Rust"
+version = "0.7.0"
+
+[language_servers.ww_lsp]
+name = "ww_lsp"
+languages = ["Rust"]

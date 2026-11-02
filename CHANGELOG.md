@@ -11,4 +11,5 @@ All notable changes to ww_lsp. The format follows [Keep a Changelog](https://kee
 - Hover on such a type: unit and dimension, the exact scale, step, range, bounds and size on the wire (HOV-1).
 - `ww_lsp hints FILE...` and `ww_lsp hover FILE:LINE:COL`: the same analysis for a terminal or a script (CLI-1); `--version` with the git SHA and commit time, shell completion with live `.rs` file values (CLI-2), `ww_lsp usage` from a local per-subcommand record (CLI-3).
 - Editor setup for Neovim, Helix and Zed in the README.
+- A Zed extension in `editors/zed` that runs `ww_lsp serve` for Rust files, installed with `just install-zed` (LSP-7).
 

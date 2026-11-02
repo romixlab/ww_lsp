@@ -47,7 +47,7 @@ The single source of truth for what ww_lsp does, what is being worked on and wha
 - 📋 **LSP-4 Completion**: unit, prefix and origin names from exact_units' tables inside `Fixed<..>` and `Point<..>`.
 - 📋 **LSP-5 Shared plumbing with napier_lang**: one LSP base (document store, line index, request loop) for ww_lsp and napier_lang's server (P2525#31oct-2254b, P2525#31oct-2254d).
 - 💡 **LSP-6 Incremental sync**: full sync is fine for API files of a few hundred lines.
-- 📋 **LSP-7 Zed extension**: Zed starts only servers an extension registers; a small extension that runs `ww_lsp serve` for Rust (the README has the settings for it).
+- ✅ **LSP-7 Zed extension**: Zed starts only servers an extension registers; `editors/zed` runs `ww_lsp serve` for Rust from PATH or `lsp.ww_lsp.binary`, `just install-zed` installs it. Not in Zed's registry. No automated test yet.
 
 ## CLI (`CLI`)
 

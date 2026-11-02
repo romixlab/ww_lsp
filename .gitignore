@@ -1,3 +1,5 @@
 /target
 /editors/zed/target
 /editors/zed/extension.wasm
+/editors/vscode/node_modules
+/editors/vscode/*.vsix

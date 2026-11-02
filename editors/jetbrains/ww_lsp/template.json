@@ -1,0 +1,18 @@
+{
+  "id": "ww_lsp",
+  "name": "ww_lsp",
+  "programArgs": {
+    "default": "ww_lsp serve"
+  },
+  "fileTypeMappings": [
+    {
+      "fileType": {
+        "name": "Rust",
+        "patterns": [
+          "*.rs"
+        ]
+      },
+      "languageId": "rust"
+    }
+  ]
+}

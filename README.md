@@ -36,59 +36,15 @@ source <(COMPLETE=bash ww_lsp)    # shell completion; zsh and fish the same with
 
 The server is `ww_lsp serve` on stdin and stdout. Attach it to Rust files next to rust-analyzer and turn inlay hints on.
 
-### Neovim 0.11+
+The ready-made setup for each editor is in `editors/`:
 
-Neovim attaches every enabled server whose filetypes match, so rust-analyzer stays as it is:
-
-```lua
-vim.lsp.config('ww_lsp', {
-  cmd = { 'ww_lsp', 'serve' },
-  filetypes = { 'rust' },
-  root_markers = { 'Cargo.toml', '.git' },
-})
-vim.lsp.enable('ww_lsp')
-vim.lsp.inlay_hint.enable(true)
-```
-
-With nvim-lspconfig on an older Neovim:
-
-```lua
-local configs = require('lspconfig.configs')
-if not configs.ww_lsp then
-  configs.ww_lsp = {
-    default_config = {
-      cmd = { 'ww_lsp', 'serve' },
-      filetypes = { 'rust' },
-      root_dir = require('lspconfig.util').root_pattern('Cargo.toml', '.git'),
-    },
-  }
-end
-require('lspconfig').ww_lsp.setup({})
-vim.lsp.inlay_hint.enable(true) -- Neovim 0.10
-```
-
-`:checkhealth vim.lsp` (or `:LspInfo`) shows both servers attached to a Rust buffer.
-
-### Helix
-
-`~/.config/helix/languages.toml`:
-
-```toml
-[language-server.ww_lsp]
-command = "ww_lsp"
-args = ["serve"]
-
-[[language]]
-name = "rust"
-language-servers = ["rust-analyzer", "ww_lsp"]
-```
-
-and in `~/.config/helix/config.toml`:
-
-```toml
-[editor.lsp]
-display-inlay-hints = true
-```
+- **Neovim 0.11+:** copy [`editors/neovim/ww_lsp.lua`](editors/neovim/ww_lsp.lua) to `~/.config/nvim/plugin/`. For Neovim 0.10 with nvim-lspconfig, run [`ww_lsp_lspconfig.lua`](editors/neovim/ww_lsp_lspconfig.lua) from your config. `:checkhealth vim.lsp` shows both servers attached to a Rust buffer.
+- **Helix:** add [`languages.toml`](editors/helix/languages.toml) and [`config.toml`](editors/helix/config.toml) from `editors/helix` to the files of the same name in `~/.config/helix/`.
+- **Kakoune with kakoune-lsp:** source [`editors/kakoune/ww_lsp.kak`](editors/kakoune/ww_lsp.kak) from `kakrc`, after `eval %sh{kak-lsp}`.
+- **Emacs with lsp-mode:** load [`editors/emacs/ww-lsp.el`](editors/emacs/ww-lsp.el) after lsp-mode. Eglot runs one server per buffer, so it can't run ww_lsp beside rust-analyzer.
+- **VS Code and Cursor:** run `just package-vscode`, then install `editors/vscode/ww-lsp-0.1.0.vsix` with `Extensions: Install from VSIX...`. The `ww_lsp.path` setting names a binary that is not on PATH.
+- **JetBrains IDEs with the LSP4IJ plugin:** add a language server, choose `Import from custom template...` and pick `editors/jetbrains/ww_lsp`. RustRover doesn't use rust-analyzer, so ww_lsp runs beside its own analysis.
+- **Zed:** see below.
 
 ### Zed
 

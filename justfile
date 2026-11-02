@@ -34,6 +34,10 @@ install-zed:
     cp editors/zed/extension.toml {{data_directory()}}/zed/extensions/installed/ww-lsp/
     cp editors/zed/target/wasm32-wasip2/release/ww_lsp_zed.wasm {{data_directory()}}/zed/extensions/installed/ww-lsp/extension.wasm
 
+# Package the VS Code extension as a .vsix in editors/vscode
+package-vscode:
+    cd editors/vscode && npm ci && npx --yes @vscode/vsce package
+
 # Bring this PC up to main: pull, install, check --version against main
 deploy:
     if command -v tpm >/dev/null; then tpm repos pull ww_lsp; else git pull --ff-only; fi

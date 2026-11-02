@@ -1,0 +1,3 @@
+# Inlay hints on. Add to ~/.config/helix/config.toml
+[editor.lsp]
+display-inlay-hints = true

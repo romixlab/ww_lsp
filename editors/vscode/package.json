@@ -1,0 +1,34 @@
+{
+  "name": "ww-lsp",
+  "displayName": "ww_lsp",
+  "description": "exact_units types of WireWeaver APIs as inlay hints and hover, beside rust-analyzer",
+  "version": "0.1.0",
+  "publisher": "romixlab",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/romixlab/ww_lsp"
+  },
+  "engines": {
+    "vscode": "^1.82.0"
+  },
+  "activationEvents": [
+    "onLanguage:rust"
+  ],
+  "main": "./extension.js",
+  "contributes": {
+    "configuration": {
+      "title": "ww_lsp",
+      "properties": {
+        "ww_lsp.path": {
+          "type": "string",
+          "default": "ww_lsp",
+          "description": "The ww_lsp binary, by default from PATH."
+        }
+      }
+    }
+  },
+  "dependencies": {
+    "vscode-languageclient": "^9.0.1"
+  }
+}

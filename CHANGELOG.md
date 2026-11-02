@@ -12,4 +12,5 @@ All notable changes to ww_lsp. The format follows [Keep a Changelog](https://kee
 - `ww_lsp hints FILE...` and `ww_lsp hover FILE:LINE:COL`: the same analysis for a terminal or a script (CLI-1); `--version` with the git SHA and commit time, shell completion with live `.rs` file values (CLI-2), `ww_lsp usage` from a local per-subcommand record (CLI-3).
 - Editor setup for Neovim, Helix and Zed in the README.
 - A Zed extension in `editors/zed` that runs `ww_lsp serve` for Rust files, installed with `just install-zed` (LSP-7).
+- Ready-made setup files in `editors/` for Neovim, Helix, Kakoune, Emacs and JetBrains, and a VS Code extension packaged with `just package-vscode` (LSP-8).
 

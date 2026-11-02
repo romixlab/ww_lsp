@@ -34,6 +34,8 @@ Cargo workspace, edition 2024, one shared version (`[workspace.package]`), depen
     - `tests/golden.rs`, `tests/fixtures/` — fixture APIs with their golden hints (`.hints`) and hovers (`.hover`).
 - `crates/ww_lsp/` — the binary: `serve` (`src/server.rs`, `lsp-server` + `lsp-types`), `hints` and `hover` (`src/output.rs`), completion (`src/complete.rs`), the usage record (`src/usage.rs`), `build.rs` for `--version`.
 - `editors/zed/` — the Zed extension (LSP-7), a workspace of its own outside the root one: it builds only for `wasm32-wasip2`, with its own version and `Cargo.lock`. `zed_extension_api` brings its own duplicate build dependencies (`hashbrown`), left as they are.
+- `editors/vscode/` — the VS Code extension (LSP-8), one JavaScript file because VS Code extensions run on JavaScript, with its own version.
+- `editors/neovim/`, `helix/`, `kakoune/`, `emacs/`, `jetbrains/` — setup files for those editors (LSP-8). A new editor gets a file here and a line in the README.
 
 ## Commands
 
@@ -43,6 +45,7 @@ just test                  # everything (the land gate runs it): nextest, then t
 just lint                  # clippy -D warnings, fmt --check, cargo machete
 just install               # deploy profile, onto PATH through tpm install
 just install-zed           # the Zed extension, into Zed's extensions on Linux
+just package-vscode        # the VS Code extension as a .vsix in editors/vscode
 cargo run -p ww_lsp -- hints crates/ww_lsp_core/tests/fixtures/psu_api.rs
 UPDATE_GOLDEN=1 cargo nextest run -p ww_lsp_core   # rewrite the golden files, then review the diff
 ```

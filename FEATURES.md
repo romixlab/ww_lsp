@@ -48,6 +48,7 @@ The single source of truth for what ww_lsp does, what is being worked on and wha
 - 📋 **LSP-5 Shared plumbing with napier_lang**: one LSP base (document store, line index, request loop) for ww_lsp and napier_lang's server (P2525#31oct-2254b, P2525#31oct-2254d).
 - 💡 **LSP-6 Incremental sync**: full sync is fine for API files of a few hundred lines.
 - ✅ **LSP-7 Zed extension**: Zed starts only servers an extension registers; `editors/zed` runs `ww_lsp serve` for Rust from PATH or `lsp.ww_lsp.binary`, `just install-zed` installs it. Not in Zed's registry. No automated test yet.
+- ✅ **LSP-8 Editor configs**: ready-made setup in `editors/` for Neovim, Helix, Kakoune, Emacs (lsp-mode), VS Code and JetBrains (LSP4IJ). Neovim 0.11+ and VS Code were run by hand and returned hints. The rest are not run yet: Neovim 0.10, Helix, Kakoune, Emacs and JetBrains. No automated test yet.
 
 ## CLI (`CLI`)
 

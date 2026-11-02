@@ -1,0 +1,8 @@
+# ww_lsp beside rust-analyzer. Add to ~/.config/helix/languages.toml
+[language-server.ww_lsp]
+command = "ww_lsp"
+args = ["serve"]
+
+[[language]]
+name = "rust"
+language-servers = ["rust-analyzer", "ww_lsp"]

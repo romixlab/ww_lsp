@@ -1,0 +1,4 @@
+[profile.default]
+# a test still running this long is hung (an LSP test waiting for an answer that never comes): warn at the period,
+# kill after four of them
+slow-timeout = { period = "30s", terminate-after = 4 }

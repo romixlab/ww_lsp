@@ -1,0 +1,49 @@
+[workspace]
+resolver = "3"
+members = ["crates/ww_lsp_core", "crates/ww_lsp"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+authors = ["Roman Isaikin <romix.lab@gmail.com>"]
+repository = "https://github.com/romixlab/ww_lsp"
+
+[workspace.dependencies]
+ww_lsp_core = { path = "crates/ww_lsp_core" }
+# units, scales, prefixes, storages and origins: every symbol and number a hint shows comes from here. From git until
+# it is on crates.io. No `std` (it would turn on every unit group) and no `shrink_wrap` (the wire format, not needed
+# to describe a type); the unit groups are the ones a WireWeaver API names most (FEATURES.md HINT-6).
+exact_units = { git = "https://github.com/romixlab/exact_units", default-features = false, features = [
+    "time",
+    "electrical",
+    "mechanical",
+    "angle",
+    "thermal",
+    "dimensionless",
+    "information",
+] }
+# Rust files as syntax trees: `full` for traits and macros, `visit` to find #[ww_trait] traits anywhere, `printing` for
+# the spans of whole types (`Spanned`)
+syn = { version = "2", default-features = false, features = ["clone-impls", "full", "parsing", "printing", "visit"] }
+# `span-locations` for byte ranges of syntax nodes; no `proc-macro` (we're not one)
+proc-macro2 = { version = "1", default-features = false, features = ["span-locations"] }
+# the LSP plumbing rust-analyzer uses: synchronous, crossbeam channels, no async runtime
+lsp-server = { version = "0.7", default-features = false }
+lsp-types = { version = "0.97", default-features = false }
+serde_json = { version = "1", default-features = false, features = ["std"] }
+clap = { version = "4", default-features = false, features = ["std", "derive", "help", "usage", "error-context", "color", "suggestions"] }
+clap_complete = { version = "4", default-features = false, features = ["unstable-dynamic"] }
+anstream = { version = "0.6", default-features = false, features = ["auto"] }
+anstyle = { version = "1", default-features = false, features = ["std"] }
+
+[profile.dev]
+split-debuginfo = "unpacked"
+
+[profile.test]
+split-debuginfo = "unpacked"
+
+# `just install` / `just deploy`
+[profile.deploy]
+inherits = "release"
+incremental = true

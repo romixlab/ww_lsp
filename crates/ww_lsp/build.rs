@@ -2,7 +2,7 @@
 //! `ww_lsp --version`, so any installed build can be traced back to its commit. Both fall back to `unknown`
 //! without git.
 //!
-//! Worktree-safe (the tpm repos' build.rs, tpm_cli's is the model): in a worktree `.git` is a file, not a dir, so
+//! Worktree-safe: in a worktree `.git` is a file, not a dir, so
 //! watching the fixed `.git/HEAD` and `.git/index` paths never finds them ("the file `.git/HEAD` is missing"),
 //! cargo treats build.rs as always-stale, and `BUILD_TIME` used to be the clock, so the crate really
 //! recompiled on every build (4.4 s for a no-op `cargo build`, more for `test --no-run`). Fixed by resolving the

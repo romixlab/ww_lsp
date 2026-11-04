@@ -5,7 +5,7 @@ The single source of truth for what ww_lsp does, what is being worked on and wha
 ## How to use this file
 
 - **Status**: ✅ done, 🚧 in progress or partial (the note says what is missing), 📋 planned, 💡 idea, 🐛 known bug.
-- **IDs** (`HINT-3`, `LSP-2`) are stable: never renumber or reuse one. A new item takes the next free number of its area (`tpm work claim AREA` in a session). Use the bare ID in commits, CHANGELOG entries and code `TODO`s (`// TODO(HINT-7): ...`); when talking to people, name it with a short slug (`HINT-6 all-unit-groups`).
+- **IDs** (`HINT-3`, `LSP-2`) are stable: never renumber or reuse one. A new item takes the next free number of its area. Use the bare ID in commits, CHANGELOG entries and code `TODO`s (`// TODO(HINT-7): ...`); when talking to people, name it with a short slug (`HINT-6 all-unit-groups`).
 - Update an item in the same commit as the code: mark it ✅ with a pointer to the code or test. Items that turn out obsolete move to *Dropped and superseded* with a one-line reason.
 
 ## Crates
@@ -45,7 +45,7 @@ The single source of truth for what ww_lsp does, what is being worked on and wha
 - ✅ **LSP-2 Inlay hints and hover**: hints after each type with the hover as tooltip; hover with the type's range.
 - 📋 **LSP-3 Diagnostics**: unit mistakes (a `Fixed` whose unit or scale exact_units doesn't know, a range that doesn't fit the storage, a `Product` scale in an API).
 - 📋 **LSP-4 Completion**: unit, prefix and origin names from exact_units' tables inside `Fixed<..>` and `Point<..>`.
-- 📋 **LSP-5 Shared plumbing with napier_lang**: one LSP base (document store, line index, request loop) for ww_lsp and napier_lang's server (P2525#31oct-2254b, P2525#31oct-2254d).
+- 📋 **LSP-5 Shared plumbing with napier_lang**: one LSP base (document store, line index, request loop) for ww_lsp and napier_lang's server.
 - 💡 **LSP-6 Incremental sync**: full sync is fine for API files of a few hundred lines.
 - ✅ **LSP-7 Zed extension**: Zed starts only servers an extension registers; `editors/zed` runs `ww_lsp serve` for Rust from PATH or `lsp.ww_lsp.binary`, `just install-zed` installs it. Not in Zed's registry. No automated test yet.
 - ✅ **LSP-8 Editor configs**: ready-made setup in `editors/` for Neovim, Helix, Kakoune, Emacs (lsp-mode), VS Code and JetBrains (LSP4IJ). Neovim 0.11+ and VS Code were run by hand and returned hints. The rest are not run yet: Neovim 0.10, Helix, Kakoune, Emacs and JetBrains. No automated test yet.

@@ -2,14 +2,14 @@
 
 Guidance for AI agents and contributors. Read this before changing code.
 
-ww_lsp is a language server for WireWeaver APIs that runs beside rust-analyzer. WireWeaver APIs are Rust traits (`#[ww_trait]`, `property!(ro+observe i_a: Fixed<Ampere, Milli, i32>)`), and rust-analyzer can't be extended, so this is a second server attached to the same files: it shows the exact_units types of API items as inlay hints (`mV · i16 · ±32.767 V`) and explains them on hover. It is a prototype (WireWeaver project P2401, task P2401#2nov-0609).
+ww_lsp is a language server for WireWeaver APIs that runs beside rust-analyzer. WireWeaver APIs are Rust traits (`#[ww_trait]`, `property!(ro+observe i_a: Fixed<Ampere, Milli, i32>)`), and rust-analyzer can't be extended, so this is a second server attached to the same files: it shows the exact_units types of API items as inlay hints (`mV · i16 · ±32.767 V`) and explains them on hover. It is a prototype.
 
 ## FEATURES.md is the source of truth
 
 [FEATURES.md](FEATURES.md) lists every feature with its status, known bugs and what is planned, with stable IDs per area (`PAR`, `HINT`, `HOV`, `LSP`, `CLI`).
 
 - Read the relevant area before starting; a "new" idea is often already there.
-- Update it in the same commit as the code. Never renumber or reuse an ID; a new one is the next free number of its area (`tpm work claim AREA` in a session).
+- Update it in the same commit as the code. Never renumber or reuse an ID; a new one is the next free number of its area.
 - Name IDs with a short slug when talking to people (`HINT-6 all-unit-groups`); commits, CHANGELOG and code `TODO`s keep the bare ID.
 - No status anywhere else (README checklists, TODO files).
 
@@ -19,8 +19,8 @@ Every change a user would notice gets an entry under `## [Unreleased]` in the sa
 
 ## Versions and landing
 
-- Branches never bump versions. A session's work lands through `tpm land`, which rebases it onto main, moves the `[Unreleased]` entries under the new version and bumps it. A branch only adds to `[Unreleased]`.
-- No `git push` from a session; `tpm land` takes the branch to main.
+- Branches never bump versions. Landing a branch onto main moves the `[Unreleased]` entries under the new version and bumps it. A branch only adds to `[Unreleased]`.
+- No version bump or direct push to main from a branch; that happens when the branch lands.
 
 ## Layout
 
@@ -40,7 +40,7 @@ Cargo workspace, edition 2024, one shared version (`[workspace.package]`), depen
 ## Commands
 
 ```sh
-just test --changed        # a session, before tpm work ready: the crates changed against main
+just test --changed        # before submitting changes: the crates changed against main
 just test                  # everything (the land gate runs it): nextest, then the doctests
 just lint                  # clippy -D warnings, fmt --check, cargo machete
 just install               # deploy profile, onto PATH through tpm install

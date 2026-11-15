@@ -197,10 +197,10 @@ pub fn hover(desc: &Desc, written: &str) -> String {
     match desc {
         Desc::Fixed(f) => fixed_facts(&mut out, f, None),
         Desc::Point { origin, fixed } => {
-            let reference = if origin.reference.is_empty() {
+            let reference = if origin.reference.name.is_empty() {
                 String::new()
             } else {
-                format!(" from {}", origin.reference)
+                format!(" from {}", origin.reference.name)
             };
             let _ = writeln!(
                 out,

@@ -1,13 +1,14 @@
 //! What an exact_units type in a source file stands for: its unit, scale, storage and bounds, or its origin for a
-//! point. Every symbol and number comes from exact_units itself: [units::by_name] for the units, [Prefix::from_name]
-//! for the prefixes, the [Storage], [Bounds], [FixedScale] and [Origin] consts of the marker types for the rest. What
-//! is ours is only which names to look for: the storages, the origins and the aliases (`Millis`, `Q15`) have no
-//! table by name in exact_units, so they are listed here as types and their values read from the types.
+//! point. Every name, symbol and number comes from exact_units itself: [units::by_name] for the units,
+//! [Prefix::from_name] for the prefixes, [origins::ALL] for the origins, [types::ALIASES] for the aliases (`Millis`,
+//! `Q15`), the [Storage] and [FixedScale] consts of the marker types for the rest. What is ours is only which number
+//! types to look for: the storages have no table by name in exact_units, so they are listed here as types and their
+//! values read from the types.
 
 use exact_units::prefix::{self, FixedScale};
-use exact_units::units::{self, Ratio};
-use exact_units::{Bounds, Fixed, Magnitude, OriginDef, Prefix, Repr, Storage, Unit, UnitExpr};
-use exact_units::{Origin, origins};
+use exact_units::types::{self, AliasDef, AliasParam};
+use exact_units::units;
+use exact_units::{Magnitude, OriginDef, Prefix, ScaleDef, Storage, UnitExpr, origins};
 use std::collections::HashMap;
 use std::sync::{Mutex, OnceLock};
 use syn::{Expr, GenericArgument, Lit, PathArguments, Type, UnOp};
@@ -115,7 +116,7 @@ fn describe_depth(ty: &Type, aliases: &Aliases, depth: u8) -> Option<Desc> {
     match name.as_str() {
         "Fixed" => fixed(&args, aliases).map(Desc::Fixed),
         "Point" => {
-            let origin = origin_by_name(&last_segment(args.first()?)?.0)?;
+            let origin = origin(args.first()?)?;
             let Desc::Fixed(fixed) = describe_depth(args.get(1)?, aliases, depth + 1)? else {
                 return None;
             };
@@ -125,7 +126,7 @@ fn describe_depth(ty: &Type, aliases: &Aliases, depth: u8) -> Option<Desc> {
             })
         }
         _ => {
-            if let Some(alias) = ALIASES.iter().find(|a| a.name == name) {
+            if let Some(alias) = types::ALIASES.iter().find(|a| a.name == name) {
                 return alias_desc(alias, &args, aliases).map(Desc::Fixed);
             }
             let local = aliases.get(&name)?;
@@ -239,10 +240,14 @@ fn scale(ty: &Type) -> Option<ScaleDesc> {
 }
 
 fn of_scale<P: FixedScale>() -> ScaleDesc {
+    of_scale_def(&P::DEF)
+}
+
+fn of_scale_def(def: &ScaleDef) -> ScaleDesc {
     ScaleDesc {
-        name: P::NAME,
-        magnitude: P::SCALE,
-        symbol: P::SYMBOL,
+        name: def.name,
+        magnitude: def.scale,
+        symbol: def.symbol,
     }
 }
 
@@ -256,9 +261,9 @@ fn of_storage<T: Storage>() -> StorageDesc {
     }
 }
 
-/// The number types of exact_units a WireWeaver API stores a `Fixed` in, by their [Storage::NAME].
-fn storage(ty: &Type, aliases: &Aliases) -> Option<StorageDesc> {
-    let all = [
+/// The number types of exact_units a WireWeaver API stores a `Fixed` in.
+fn storages() -> [StorageDesc; 10] {
+    [
         of_storage::<u8>(),
         of_storage::<u16>(),
         of_storage::<u32>(),
@@ -269,7 +274,17 @@ fn storage(ty: &Type, aliases: &Aliases) -> Option<StorageDesc> {
         of_storage::<i64>(),
         of_storage::<f32>(),
         of_storage::<f64>(),
-    ];
+    ]
+}
+
+/// A number type by its [Storage::NAME]: `"i16"`.
+fn storage_by_name(name: &str) -> Option<StorageDesc> {
+    storages().into_iter().find(|s| s.name == name)
+}
+
+/// The number type a type names, by its [Storage::NAME].
+fn storage(ty: &Type, aliases: &Aliases) -> Option<StorageDesc> {
+    let all = storages();
     let (name, _) = last_segment(ty)?;
     all.into_iter().find(|s| s.name == name).or_else(|| {
         // a file's own alias of a number type, one level
@@ -300,110 +315,56 @@ fn bounds(ty: &Type, storage: &StorageDesc) -> Option<BoundsDesc> {
     }
 }
 
-/// An origin of exact_units by its marker's name.
-fn origin_by_name(name: &str) -> Option<OriginDef> {
-    let all = [
-        origins::UnixEpoch::DEF,
-        origins::AbsoluteZero::DEF,
-        origins::Celsius::DEF,
-        origins::Rankine::DEF,
-        origins::Fahrenheit::DEF,
-        origins::Vacuum::DEF,
-        origins::Gauge::DEF,
-        origins::AboveStandardAtmosphere::DEF,
-    ];
-    all.into_iter().find(|o| o.name == name)
-}
-
-/// An alias of a `Fixed` that exact_units declares, and which of its parameters a source gives.
-struct Alias {
-    name: &'static str,
-    param: AliasParam,
-    of: fn() -> FixedDesc,
-}
-
-/// What the generic parameter of an alias is.
-#[derive(PartialEq)]
-enum AliasParam {
-    /// None: `Duty16`, `Bam16`.
-    None,
-    /// The storage: `Millis<T>`.
-    Storage,
-    /// The unit, `Ratio` when left out: `Q15<U = Ratio>`.
-    Unit,
-}
-
-/// The parts of an instance of an alias, read from the type itself.
-fn parts<U: Unit, P: FixedScale, T: Storage, B: Bounds<T>>(
-    _: fn() -> Fixed<U, P, T, B>,
-) -> FixedDesc {
-    let int = |v: Option<T>| match v.map(Storage::to_repr) {
-        Some(Repr::Int(i)) => Some(i),
-        _ => None,
-    };
-    let type_name = core::any::type_name::<B>();
-    FixedDesc {
-        unit: U::EXPR,
-        scale: of_scale::<P>(),
-        storage: of_storage::<T>(),
-        bounds: BoundsDesc {
-            name: type_name.rsplit("::").next().unwrap_or(type_name).into(),
-            min: int(B::MIN),
-            max: int(B::MAX),
-        },
-    }
-}
-
-/// `Fixed::default` as a function of the alias' type, for [parts].
-macro_rules! alias {
-    ($name:ident, $param:ident, $ty:ty) => {
-        Alias {
-            name: stringify!($name),
-            param: AliasParam::$param,
-            of: || parts(<$ty>::default),
-        }
-    };
-}
-
-/// The aliases of exact_units, instanced with a placeholder storage (`u8`) or unit (`Ratio`) where generic.
-const ALIASES: &[Alias] = &[
-    alias!(Nanos, Storage, exact_units::Nanos<u8>),
-    alias!(Micros, Storage, exact_units::Micros<u8>),
-    alias!(Millis, Storage, exact_units::Millis<u8>),
-    alias!(Secs, Storage, exact_units::Secs<u8>),
-    alias!(Minutes, Storage, exact_units::Minutes<u8>),
-    alias!(Hours, Storage, exact_units::Hours<u8>),
-    alias!(Days, Storage, exact_units::Days<u8>),
-    alias!(Hz, Storage, exact_units::Hz<u8>),
-    alias!(Bytes, Storage, exact_units::Bytes<u8>),
-    alias!(Kibibytes, Storage, exact_units::Kibibytes<u8>),
-    alias!(Mebibytes, Storage, exact_units::Mebibytes<u8>),
-    alias!(Gibibytes, Storage, exact_units::Gibibytes<u8>),
-    alias!(Ppb, Storage, exact_units::Ppb<u8>),
-    alias!(Percent, Storage, exact_units::Percent<u8>),
-    alias!(Permille, Storage, exact_units::Permille<u8>),
-    alias!(Duty16, None, exact_units::Duty16),
-    alias!(Bam16, None, exact_units::Bam16),
-    alias!(Bam32, None, exact_units::Bam32),
-    alias!(Q15, Unit, exact_units::Q15<Ratio>),
-    alias!(Q31, Unit, exact_units::Q31<Ratio>),
-    alias!(UQ16_16, Unit, exact_units::UQ16_16<Ratio>),
-];
-
-fn alias_desc(alias: &Alias, args: &[Type], aliases: &Aliases) -> Option<FixedDesc> {
-    let mut desc = (alias.of)();
-    match (&alias.param, args) {
-        (AliasParam::None, []) | (AliasParam::Unit, []) => {}
-        (AliasParam::Storage, [t]) => {
-            desc.storage = storage(t, aliases)?;
-            // the alias' bounds are Unbounded: the new storage's range
-            desc.bounds.min = None;
-            desc.bounds.max = None;
-        }
-        (AliasParam::Unit, [u]) => desc.unit = unit(u)?,
+/// An origin of exact_units: its marker by name (`Celsius`), or `Angle<U>` by its unit.
+fn origin(ty: &Type) -> Option<OriginDef> {
+    let (name, args) = last_segment(ty)?;
+    let unit = match args.as_slice() {
+        [] => None,
+        [u] => Some(unit(u)?),
         _ => return None,
+    };
+    origins::ALL
+        .iter()
+        .find(|o| o.name == name && unit.is_none_or(|u| u == o.unit))
+        .copied()
+}
+
+/// An alias of a `Fixed` that exact_units declares, with the parameters a source gives: each required one, then
+/// those with a default, in order. An alias of a `Complex` is no `Fixed`: `None`.
+fn alias_desc(alias: &AliasDef, args: &[Type], aliases: &Aliases) -> Option<FixedDesc> {
+    if alias.wrapper != "Fixed" || args.len() > alias.params.len() {
+        return None;
     }
-    Some(desc)
+    let (mut unit, mut scale, mut storage, mut bounds) = (
+        alias.unit,
+        alias.scale.as_ref().map(of_scale_def),
+        alias.storage.and_then(storage_by_name),
+        alias.bounds.map(|name| BoundsDesc {
+            name: name.into(),
+            min: None,
+            max: None,
+        }),
+    );
+    // a parameter left out takes its default, if there is one
+    let mut bounds_arg = None;
+    for (param, arg) in alias.params.iter().zip(args) {
+        match param {
+            AliasParam::U => unit = Some(self::unit(arg)?),
+            AliasParam::P => scale = Some(self::scale(arg)?),
+            AliasParam::T => storage = Some(self::storage(arg, aliases)?),
+            AliasParam::B => bounds_arg = Some(arg),
+        }
+    }
+    let storage = storage?;
+    if let Some(b) = bounds_arg {
+        bounds = Some(self::bounds(b, &storage)?);
+    }
+    Some(FixedDesc {
+        unit: unit?,
+        scale: scale?,
+        storage,
+        bounds: bounds?,
+    })
 }
 
 /// The last path segment's name and its type arguments: `Fixed` and `[Volt, Milli, i16]`.

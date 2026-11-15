@@ -74,3 +74,33 @@ fn compound_units_and_families() {
         ]
     );
 }
+
+/// The aliases and origins come from exact_units' tables (HINT-9): those the old hand lists missed too.
+#[test]
+fn aliases_and_origins_from_exact_units() {
+    let src = "#[ww_trait]\ntrait A {\n\
+               property!(rw a: Ppm<i16>);\n\
+               property!(rw b: PhaseBam16);\n\
+               property!(rw c: Bytes<u8, Range<1, 64>>);\n\
+               property!(rw d: Point<Angle<Degree>, Fixed<Degree, One, i16>>);\n\
+               property!(rw e: Point<GpsEpoch, Millis<u64>>);\n\
+               property!(rw f: CQ15);\n\
+               property!(rw g: Millis<u8, u8>);\n}";
+    let hints: Vec<_> = ww_lsp_core::analyze(src)
+        .unwrap()
+        .into_iter()
+        .map(|f| (f.item, f.hint))
+        .collect();
+    // a Complex is no Fixed and a parameter too many is no alias: no hint, never a guess
+    assert_eq!(
+        hints,
+        [
+            ("property a", "µ · i16 · ±0.032767"),
+            ("property b", "UQ0.16 rev · 0..1 rev"),
+            ("property c", "B · u8 · 1..64 B"),
+            ("property d", "°"),
+            ("property e", "s GPS"),
+        ]
+        .map(|(i, h)| (i.to_string(), h.to_string()))
+    );
+}

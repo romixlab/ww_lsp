@@ -25,13 +25,13 @@ The single source of truth for what ww_lsp does, what is being worked on and wha
 
 - ✅ **HINT-1 Fixed**: `Fixed<U, P, T, B>` as unit with prefix, storage and, for 16 bits or less or a `Range`, the range in the unit: `mV · i16 · ±32.767 V`, `mA · u16 · 0..5 A`. ± for a symmetric range and for the full range of a signed storage at a decimal scale. A scale without a prefix symbol is written as a factor: `s·10⁻⁴`, `V·33/40960` (`crates/ww_lsp_core/src/format.rs`).
 - ✅ **HINT-2 Q formats**: a `2⁻ⁿ` scale of an integer storage names itself, `Q15 · −1..1`, `Q3.12 A · −8..8 A`, `UQ24.8 W`.
-- ✅ **HINT-3 exact_units aliases**: `Millis<T>`, `Micros<T>`, `Hz<T>`, `Bytes<T>`, `Percent<T>`, `Duty16`, `Bam16`, `Q15<U>`, `Q31<U>`, `UQ16_16<U>` and the others of exact_units, read from the alias types themselves (`describe.rs` `ALIASES`).
-- ✅ **HINT-4 Points**: `Point<Celsius, Fixed<..>>` as the origin's symbol, `°C`.
+- ✅ **HINT-3 exact_units aliases**: `Millis<T>`, `Micros<T>`, `Hz<T>`, `Bytes<T, B>`, `Percent<T>`, `Ppm<T>`, `Count<Of, T, B>`, `Duty16`, `Bam16`, `PhaseBam16`, `Q15<U>`, `Q31<U>`, `UQ16_16<U>` and every other alias of a `Fixed` in exact_units' `types::ALIASES`, with their parameters and defaults from there. An alias of a `Complex` (`CQ15`) gets no hint.
+- ✅ **HINT-4 Points**: `Point<Celsius, Fixed<..>>` as the origin's symbol, `°C`; every origin of exact_units' `origins::ALL`, `Angle<Degree>` by its unit.
 - ✅ **HINT-5 Units**: every named unit of the enabled groups by its marker name (exact_units `units::by_name`), and `Per`, `Times`, `Sqrt` of them (`Per<Volt, Second>` as `kV/s` at `Kilo`); scales `One`, the SI and binary prefixes, `Pow10<E>`, `Pow2<E>`, `Rational<N, D>`, `FullScale<V, BITS>`, `FullScaleMax<V, BITS>`; bounds `Unbounded`, `Wrapping`, `Saturating`, `Range`, `RangeU64`. Unknown types get no hint.
 - 📋 **HINT-6 All unit groups**: the build enables time, electrical, mechanical, angle, thermal, dimensionless and information; chemical, photometric, radiation, counting and customary units get no hint yet.
 - 📋 **HINT-7 Ratios with their sign**: `Percent<u8>` shows `10⁻²` where exact_units writes `%` (its ratio suffixes `%`, `‰`, `ppm`, `ppb` are public only under `defmt`).
 - 💡 **HINT-8 Niches**: `0xFE error, 0xFF n/a` for a value with niche codes.
-- 💡 **HINT-9 Tables by name in exact_units**: the storages, origins and aliases are listed in `describe.rs` as types (their values come from exact_units' consts); `origins::ALL` and an alias table in exact_units would drop the lists here.
+- ✅ **HINT-9 Tables by name in exact_units**: origins and aliases come from exact_units' `origins::ALL` and `types::ALIASES` (its IO-17); only the storages are still listed in `describe.rs` as types, as exact_units has no table of them (`crates/ww_lsp_core/tests/golden.rs` `aliases_and_origins_from_exact_units`).
 - 📋 **HINT-10 Number types of the wire**: `UNib32`, `UVlq32`, `UVlq64`, `Nibble` and the bit fields (`U12`, `I5`) need exact_units' `shrink_wrap` feature.
 
 ## Hover (`HOV`)

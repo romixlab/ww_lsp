@@ -28,7 +28,7 @@ Cargo workspace, edition 2024, one shared version (`[workspace.package]`), depen
 
 - `crates/ww_lsp_core/` — the analysis, a library without LSP types.
     - `src/parse.rs` — finds the API traits and their items with `syn` (`full`, `visit`), and the types in them.
-    - `src/describe.rs` — what an exact_units type stands for: `Fixed`, `Point`, the aliases, units, scales, storages, bounds, origins. Every symbol and number comes from exact_units (`units::by_name`, `Prefix::from_name`, the `Storage` / `Bounds` / `FixedScale` / `Origin` consts); this file only lists the names to look for.
+    - `src/describe.rs` — what an exact_units type stands for: `Fixed`, `Point`, the aliases, units, scales, storages, bounds, origins. Every name, symbol and number comes from exact_units (`units::by_name`, `Prefix::from_name`, `origins::ALL`, `types::ALIASES`, the `Storage` / `FixedScale` consts); this file only lists the storage types.
     - `src/format.rs` — the hint and hover text.
     - `src/line_index.rs` — byte offsets to lines and UTF-16 columns and back.
     - `tests/golden.rs`, `tests/fixtures/` — fixture APIs with their golden hints (`.hints`) and hovers (`.hover`).
@@ -55,7 +55,7 @@ cargo-nextest and cargo-machete: `cargo install --locked cargo-nextest cargo-mac
 ## Conventions
 
 - `ww_lsp_core` stays free of LSP types: positions are byte offsets; the binary converts them.
-- No hand-written tables of symbols, scales or ranges: take them from exact_units. Where exact_units has no table by name (storages, origins, aliases), list the types and read their consts (FEATURES.md HINT-9).
+- No hand-written tables of symbols, scales or ranges: take them from exact_units. Where exact_units has no table by name (storages), list the types and read their consts.
 - Hints are short and read like the value; everything else goes into the hover. A type ww_lsp doesn't understand gets no hint, never a guess.
 - proc-macro2 keeps every parsed source in a thread-local map for spans; `analyze` clears it after each parse (`invalidate_current_thread_spans`), so take byte ranges inside it and keep no `Span` past it.
 - CLI output: colour through `anstream` / `anstyle`, off when not a terminal, with `NO_COLOR` or `--color never`; errors as `error: ...` on stderr and a non-zero exit.

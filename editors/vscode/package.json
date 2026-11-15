@@ -24,6 +24,11 @@
           "type": "string",
           "default": "ww_lsp",
           "description": "The ww_lsp binary, by default from PATH."
+        },
+        "ww_lsp.semanticTokens": {
+          "type": "boolean",
+          "default": false,
+          "description": "Highlight WireWeaver syntax with ww_lsp's semantic tokens. VS Code shows one server's tokens only, so this replaces rust-analyzer's."
         }
       }
     }

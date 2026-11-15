@@ -15,5 +15,8 @@
 
 (setq lsp-inlay-hint-enable t)
 
+;; Semantic tokens stay off: lsp-mode colours a buffer with the tokens of one server only (the first workspace), so
+;; ww_lsp's would compete with rust-analyzer's. `(setq lsp-semantic-tokens-enable t)' turns them on for both.
+
 (provide 'ww-lsp)
 ;;; ww-lsp.el ends here

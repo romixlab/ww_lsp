@@ -6,3 +6,4 @@ args = ["serve"]
 [[language]]
 name = "rust"
 language-servers = ["rust-analyzer", "ww_lsp"]
+# Helix has no LSP semantic tokens yet: ww_lsp gives hints and hover only.

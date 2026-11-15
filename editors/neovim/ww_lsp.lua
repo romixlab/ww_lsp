@@ -6,3 +6,4 @@ vim.lsp.config('ww_lsp', {
 })
 vim.lsp.enable('ww_lsp')
 vim.lsp.inlay_hint.enable(true)
+-- Semantic tokens are on by default; each server's are layered on the others' (@lsp.type.* highlight groups).

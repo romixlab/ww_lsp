@@ -18,6 +18,7 @@ All notable changes to ww_lsp. The format follows [Keep a Changelog](https://kee
 - Hints for every unit group of exact_units but the customary units: mol, lx, Bq, counted items and the rest (HINT-6).
 - Semantic tokens for WireWeaver syntax: item macros, access modes, attributes and exact_units names, in standard token types (LSP-9).
 - `ww_lsp tokens [--json]`: the names semantic highlighting marks; `--json` writes `ww_tokens.json` for the docs highlighter, which moved here (CLI-4).
+- Editor setups say how each editor takes semantic tokens; VS Code gets `ww_lsp.semanticTokens`, off by default (LSP-9).
 
 ### Changed
 

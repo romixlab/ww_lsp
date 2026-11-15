@@ -11,3 +11,4 @@ if not configs.ww_lsp then
 end
 require('lspconfig').ww_lsp.setup({})
 vim.lsp.inlay_hint.enable(true)
+-- Semantic tokens are on by default; each server's are layered on the others' (@lsp.type.* highlight groups).

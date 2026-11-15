@@ -46,6 +46,8 @@ The ready-made setup for each editor is in `editors/`:
 - **JetBrains IDEs with the LSP4IJ plugin:** add a language server, choose `Import from custom template...` and pick `editors/jetbrains/ww_lsp`. RustRover doesn't use rust-analyzer, so ww_lsp runs beside its own analysis.
 - **Zed:** see below.
 
+Semantic highlighting (item macros, access modes, WireWeaver attributes, exact_units names) needs no setup in Neovim and JetBrains. VS Code (`ww_lsp.semanticTokens`), Emacs and Kakoune show one server's tokens only, so there it is opt-in and replaces rust-analyzer's; Helix has no semantic tokens.
+
 ### Zed
 
 Zed starts only language servers that an extension registers, so ww_lsp comes with a small extension in `editors/zed`. It is not in Zed's extension registry. On Linux:
@@ -61,6 +63,14 @@ The extension runs `ww_lsp serve` from PATH, beside rust-analyzer, without furth
 ```json
 {
   "inlay_hints": { "enabled": true }
+}
+```
+
+Semantic highlighting of WireWeaver syntax is off in Zed unless asked for; `combined` lays the servers' tokens over the tree-sitter highlighting:
+
+```json
+{
+  "languages": { "Rust": { "semantic_tokens": "combined" } }
 }
 ```
 

@@ -373,6 +373,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "ww_highlight"
+version = "0.1.0"
+dependencies = [
+ "serde_json",
+ "ww_lsp_core",
+]
+
+[[package]]
 name = "ww_lsp"
 version = "0.1.0"
 dependencies = [
@@ -383,6 +391,7 @@ dependencies = [
  "lsp-server",
  "lsp-types",
  "serde_json",
+ "ww_highlight",
  "ww_lsp_core",
 ]
 

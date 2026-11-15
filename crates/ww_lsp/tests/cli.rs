@@ -11,18 +11,20 @@ fn fixture() -> String {
         .to_string()
 }
 
-fn ww_lsp(args: &[&str]) -> Output {
+/// The binary without the test run's `CARGO_*` variables, colour and usage record.
+fn command() -> Command {
     let mut cmd = Command::new(env!("CARGO_BIN_EXE_ww_lsp"));
     for (key, _) in std::env::vars_os() {
         if key.to_string_lossy().starts_with("CARGO_") {
             cmd.env_remove(key);
         }
     }
-    cmd.env("WW_LSP_USAGE", "off")
-        .env("NO_COLOR", "1")
-        .args(args)
-        .output()
-        .unwrap()
+    cmd.env("WW_LSP_USAGE", "off").env("NO_COLOR", "1");
+    cmd
+}
+
+fn ww_lsp(args: &[&str]) -> Output {
+    command().args(args).output().unwrap()
 }
 
 #[test]
@@ -77,4 +79,46 @@ fn version_names_the_commit() {
         "{v}"
     );
     assert!(v.contains(", commit "), "{v}");
+}
+
+#[test]
+fn tokens_by_kind_and_as_json() {
+    let out = ww_lsp(&["tokens"]);
+    assert!(out.status.success());
+    let stdout = String::from_utf8(out.stdout).unwrap();
+    assert!(
+        stdout.starts_with("ItemMacro   method property sink stream\n"),
+        "{stdout}"
+    );
+    assert_eq!(stdout.lines().count(), 8);
+    let json = ww_lsp(&["tokens", "--json"]);
+    assert!(json.status.success());
+    let json = String::from_utf8(json.stdout).unwrap();
+    assert_eq!(json, ww_highlight::tokens_json());
+    assert_eq!(
+        json,
+        ww_highlight::TOKENS_JSON,
+        "the checked-in file is current"
+    );
+}
+
+/// `source <(COMPLETE=fish ww_lsp)`: the subcommand and its flag are offered, with their help.
+#[test]
+fn completion_offers_tokens() {
+    let complete = |args: &[&str]| {
+        let mut all = vec!["--", "ww_lsp"];
+        all.extend_from_slice(args);
+        let out = command()
+            .env("COMPLETE", "fish")
+            .args(&all)
+            .output()
+            .unwrap();
+        String::from_utf8(out.stdout).unwrap()
+    };
+    assert!(
+        complete(&["to"]).starts_with("tokens\tPrint the names semantic highlighting marks"),
+        "{}",
+        complete(&["to"])
+    );
+    assert!(complete(&["tokens", "--j"]).starts_with("--json"));
 }

@@ -55,6 +55,7 @@ The single source of truth for what ww_lsp does, what is being worked on and wha
 
 - ✅ **CLI-1 hints and hover**: `ww_lsp hints FILE...` (`FILE:LINE:COL  HINT  (ITEM)`, 1-based), `ww_lsp hover FILE:LINE:COL`; exit 1 for a file that isn't Rust or no type at the position (`crates/ww_lsp/tests/cli.rs`).
 - ✅ **CLI-2 Version and completion**: `--version` with git SHA and commit time (`build.rs`); `source <(COMPLETE=bash ww_lsp)` for bash, zsh and fish, `.rs` files offered with how many typed API items they have. 📋 wire_weaver's bash adapter for paths with spaces and quotes.
+- ✅ **CLI-4 tokens and the docs highlighter**: `ww_lsp tokens` prints the names semantic highlighting marks (LSP-9), one line per kind; `--json` writes them as `ww_tokens.json`, the token lists of the browser highlighter `ww_highlight.js` (first wire_weaver's DOC-11). The crate `ww_highlight` owns the script, its CSS and the generated `ww_tokens.json` (`crates/ww_highlight/assets/`) and gives them as `JS`, `CSS` and `tokens_json()`, so a docs site vendors copies and checks them against the ww_lsp it pins. Adds `sink`, `batched`, every exact_units alias, origin, wrapper and unit group to the lists; drops `DegreeCelsius`, which exact_units no longer has. Tests: `tokens_json_is_current` in `ww_highlight`, `tokens_by_kind_and_as_json` and `completion_offers_tokens` in `crates/ww_lsp/tests/cli.rs`.
 - ✅ **CLI-3 Usage record**: each run appends its subcommand to `$XDG_STATE_HOME/ww_lsp/usage.tsv`, `ww_lsp usage` counts them; `WW_LSP_USAGE=off` turns it off.
 
 ## Dropped and superseded

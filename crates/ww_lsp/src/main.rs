@@ -1,5 +1,5 @@
 //! `ww_lsp`: the WireWeaver language server (`ww_lsp serve`, what an editor starts) and a small CLI on the same
-//! analysis, for tests and scripts (`ww_lsp hints FILE`, `ww_lsp hover FILE:LINE:COL`).
+//! analysis, for tests and scripts (`ww_lsp hints FILE`, `ww_lsp hover FILE:LINE:COL`, `ww_lsp tokens --json`).
 
 mod complete;
 mod output;
@@ -26,7 +26,7 @@ const VERSION: &str = concat!(
     name = "ww_lsp",
     version = VERSION,
     about = "A WireWeaver language server beside rust-analyzer: exact_units types as inlay hints and hover",
-    after_help = "Examples:\n  ww_lsp serve                      the server, on stdin/stdout (what an editor starts)\n  ww_lsp hints src/lib.rs           every hint of a file, one per line\n  ww_lsp hover src/lib.rs:24:30     the hover at line 24, column 30 (1-based)\n\nShell completion: source <(COMPLETE=bash ww_lsp)   (zsh, fish: the same with their name)"
+    after_help = "Examples:\n  ww_lsp serve                      the server, on stdin/stdout (what an editor starts)\n  ww_lsp hints src/lib.rs           every hint of a file, one per line\n  ww_lsp hover src/lib.rs:24:30     the hover at line 24, column 30 (1-based)\n  ww_lsp tokens --json              the names a docs site's ww_highlight.js reads (ww_tokens.json)\n\nShell completion: source <(COMPLETE=bash ww_lsp)   (zsh, fish: the same with their name)"
 )]
 struct Cli {
     /// Colour in the output: auto (a terminal without NO_COLOR), always or never
@@ -65,6 +65,12 @@ enum Command {
         #[arg(add = ArgValueCompleter::new(complete::rust_files))]
         at: String,
     },
+    /// Print the names semantic highlighting marks, by kind: item macros, access modes, attributes and exact_units' names
+    Tokens {
+        /// As `ww_tokens.json`, the token lists of a docs site's `ww_highlight.js`
+        #[arg(long)]
+        json: bool,
+    },
     /// How often each subcommand ran on this PC (from the local usage record)
     Usage,
 }
@@ -75,6 +81,8 @@ impl Command {
             Command::Serve { .. } => "serve",
             Command::Hints { .. } => "hints",
             Command::Hover { .. } => "hover",
+            Command::Tokens { json: false } => "tokens",
+            Command::Tokens { json: true } => "tokens --json",
             Command::Usage => "usage",
         }
     }
@@ -93,6 +101,7 @@ fn main() -> ExitCode {
         Command::Serve { stdio: _ } => server::run(),
         Command::Hints { files } => output::hints(&files),
         Command::Hover { at } => output::hover(&at),
+        Command::Tokens { json } => output::tokens(json),
         Command::Usage => usage::show(),
     };
     match result {

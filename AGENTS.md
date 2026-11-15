@@ -33,7 +33,8 @@ Cargo workspace, edition 2024, one shared version (`[workspace.package]`), depen
     - `src/names.rs`, `src/tokens.rs` — the WireWeaver words of a source for semantic highlighting, the exact_units names from its tables.
     - `src/line_index.rs` — byte offsets to lines and UTF-16 columns and back.
     - `tests/golden.rs`, `tests/fixtures/` — fixture APIs with their golden hints (`.hints`), hovers (`.hover`) and semantic tokens (`.tokens`).
-- `crates/ww_lsp/` — the binary: `serve` (`src/server.rs`, `lsp-server` + `lsp-types`), `hints` and `hover` (`src/output.rs`), completion (`src/complete.rs`), the usage record (`src/usage.rs`), `build.rs` for `--version`.
+- `crates/ww_highlight/` — the docs sites' browser highlighter: `assets/ww_highlight.js`, its CSS and `ww_tokens.json` (generated, `UPDATE_GOLDEN=1` rewrites it), given as consts so a site checks its vendored copies.
+- `crates/ww_lsp/` — the binary: `serve` (`src/server.rs`, `lsp-server` + `lsp-types`), `hints`, `hover` and `tokens` (`src/output.rs`), completion (`src/complete.rs`), the usage record (`src/usage.rs`), `build.rs` for `--version`.
 - `editors/zed/` — the Zed extension (LSP-7), a workspace of its own outside the root one: it builds only for `wasm32-wasip2`, with its own version and `Cargo.lock`. `zed_extension_api` brings its own duplicate build dependencies (`hashbrown`), left as they are.
 - `editors/vscode/` — the VS Code extension (LSP-8), one JavaScript file because VS Code extensions run on JavaScript, with its own version.
 - `editors/neovim/`, `helix/`, `kakoune/`, `emacs/`, `jetbrains/` — setup files for those editors (LSP-8). A new editor gets a file here and a line in the README.

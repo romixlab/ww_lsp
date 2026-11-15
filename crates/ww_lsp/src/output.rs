@@ -1,11 +1,11 @@
-//! `ww_lsp hints` and `ww_lsp hover`: the analysis printed for a terminal or a script.
+//! `ww_lsp hints`, `ww_lsp hover` and `ww_lsp tokens`: the analysis printed for a terminal or a script.
 
 use crate::Error;
-use anstream::{eprintln, println};
+use anstream::{eprintln, print, println};
 use anstyle::{AnsiColor, Style};
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
-use ww_lsp_core::{Found, LineIndex};
+use ww_lsp_core::{Found, LineIndex, TokenKind};
 
 const PATH: Style = AnsiColor::Cyan.on_default();
 const HINT: Style = AnsiColor::Green.on_default().bold();
@@ -91,4 +91,22 @@ pub(crate) fn hover(at: &str) -> Result<ExitCode, Error> {
             Ok(ExitCode::FAILURE)
         }
     }
+}
+
+/// The names semantic highlighting looks for: one line per kind, `KIND  NAME NAME ..`; with `json`, the
+/// `ww_tokens.json` a docs site's `ww_highlight.js` reads.
+pub(crate) fn tokens(json: bool) -> Result<ExitCode, Error> {
+    if json {
+        print!("{}", ww_highlight::tokens_json());
+        return Ok(ExitCode::SUCCESS);
+    }
+    let names = ww_lsp_core::names();
+    for kind in TokenKind::ALL {
+        println!(
+            "{HINT}{:<11}{HINT:#} {}",
+            format!("{kind:?}"),
+            names.of(kind).join(" ")
+        );
+    }
+    Ok(ExitCode::SUCCESS)
 }

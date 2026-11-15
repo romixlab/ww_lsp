@@ -1,0 +1,12 @@
+[package]
+name = "ww_highlight"
+description = "WireWeaver syntax highlighting for docs sites: the browser highlighter, its CSS and its token lists from ww_lsp's names"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[dependencies]
+serde_json.workspace = true
+ww_lsp_core.workspace = true

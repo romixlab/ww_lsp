@@ -13,17 +13,9 @@ repository = "https://github.com/romixlab/ww_lsp"
 [workspace.dependencies]
 ww_lsp_core = { path = "crates/ww_lsp_core" }
 # units, scales, prefixes, storages and origins: every symbol and number a hint shows comes from here. From git until
-# it is on crates.io. No `std` (it would turn on every unit group) and no `shrink_wrap` (the wire format, not needed
-# to describe a type); the unit groups are the ones a WireWeaver API names most (FEATURES.md HINT-6).
-exact_units = { git = "https://github.com/romixlab/exact_units", default-features = false, features = [
-    "time",
-    "electrical",
-    "mechanical",
-    "angle",
-    "thermal",
-    "dimensionless",
-    "information",
-] }
+# it is on crates.io. No `std` and no `shrink_wrap` (the wire format, not needed to describe a type); every unit group
+# but the customary units (`quantities`, FEATURES.md HINT-6).
+exact_units = { git = "https://github.com/romixlab/exact_units", default-features = false, features = ["quantities"] }
 # Rust files as syntax trees: `full` for traits and macros, `visit` to find #[ww_trait] traits anywhere, `printing` for
 # the spans of whole types (`Spanned`)
 syn = { version = "2", default-features = false, features = ["clone-impls", "full", "parsing", "printing", "visit"] }

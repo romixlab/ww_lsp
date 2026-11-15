@@ -104,3 +104,29 @@ fn aliases_and_origins_from_exact_units() {
         .map(|(i, h)| (i.to_string(), h.to_string()))
     );
 }
+
+/// Every unit group but the customary units has hints (HINT-6).
+#[test]
+fn all_unit_groups() {
+    let src = "#[ww_trait]\ntrait A {\n\
+               property!(ro a: Fixed<Mole, Milli, u16>);\n\
+               property!(ro b: Fixed<Lux, One, u16>);\n\
+               property!(ro c: Fixed<Becquerel, Kilo, u32>);\n\
+               property!(ro d: Count<Item, u16>);\n\
+               property!(ro e: Fixed<Inch, Milli, i32>);\n}";
+    let hints: Vec<_> = ww_lsp_core::analyze(src)
+        .unwrap()
+        .into_iter()
+        .map(|f| f.hint)
+        .collect();
+    // customary units are not enabled: no hint for an inch
+    assert_eq!(
+        hints,
+        [
+            "mmol · u16 · 0..65.535 mol",
+            "lx · u16 · 0..65535 lx",
+            "kBq · u32",
+            "item · u16 · 0..65535 item",
+        ]
+    );
+}

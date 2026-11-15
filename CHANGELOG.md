@@ -13,7 +13,6 @@ All notable changes to ww_lsp. The format follows [Keep a Changelog](https://kee
 - Editor setup for Neovim, Helix and Zed in the README.
 - A Zed extension in `editors/zed` that runs `ww_lsp serve` for Rust files, installed with `just install-zed` (LSP-7).
 - Ready-made setup files in `editors/` for Neovim, Helix, Kakoune, Emacs and JetBrains, and a VS Code extension packaged with `just package-vscode` (LSP-8).
-
 - Hints for every alias and origin in exact_units' tables: `Ppm`, `PhaseBam16`, `Count`, `Bytes<T, B>`, `Angle<U>`, the time-scale epochs (HINT-9).
 - Hints for every unit group of exact_units but the customary units: mol, lx, Bq, counted items and the rest (HINT-6).
 - Semantic tokens for WireWeaver syntax: item macros, access modes, attributes and exact_units names, in standard token types (LSP-9).

@@ -13,11 +13,16 @@ use syn::spanned::Spanned;
 use syn::visit::Visit;
 use syn::{GenericArgument, Ident, ItemTrait, PathArguments, ReturnType, Token, TraitItem, Type};
 
-pub(crate) fn find(src: &str) -> Result<Vec<Found>, ParseError> {
-    let file = syn::parse_file(src).map_err(|e| ParseError {
+/// `src` as a syntax tree.
+pub(crate) fn file(src: &str) -> Result<syn::File, ParseError> {
+    syn::parse_file(src).map_err(|e| ParseError {
         offset: e.span().byte_range().start,
         message: e.to_string(),
-    })?;
+    })
+}
+
+pub(crate) fn find(src: &str) -> Result<Vec<Found>, ParseError> {
+    let file = file(src)?;
     let mut aliases = AliasCollector::default();
     aliases.visit_file(&file);
     let mut traits = TraitCollector::default();
@@ -100,7 +105,7 @@ fn item_types(item: &TraitItem) -> Vec<(String, Type)> {
 
 /// `ro+observe+batched name: Type`, `rw name: Type, ErrorType`, `name: Type`: the name and the types. Access words
 /// and flags before the name are skipped up to the first `ident:` (not `::`).
-fn macro_item(input: ParseStream<'_>) -> syn::Result<(Ident, Vec<Type>)> {
+pub(crate) fn macro_item(input: ParseStream<'_>) -> syn::Result<(Ident, Vec<Type>)> {
     while !(input.peek(Ident) && input.peek2(Token![:]) && !input.peek2(Token![::])) {
         if input.is_empty() {
             return Err(input.error("no `name: Type` in the item"));

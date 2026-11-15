@@ -1,26 +1,34 @@
 //! The language server: LSP over stdin and stdout with `lsp-server` (rust-analyzer's own, synchronous), full
-//! document sync, inlay hints and hover. Each open document is analysed on every change; a text that doesn't parse
-//! (in the middle of typing) keeps the hints of the last one that did, at their old positions.
+//! document sync, inlay hints, hover and semantic tokens. Each open document is analysed on every change; a text that
+//! doesn't parse (in the middle of typing) keeps the hints and tokens of the last one that did, at their old
+//! positions.
 
 use crate::Error;
 use lsp_server::{Connection, ExtractError, Message, Notification, Request, Response};
 use lsp_types::notification::{
     DidChangeTextDocument, DidCloseTextDocument, DidOpenTextDocument, Notification as _,
 };
-use lsp_types::request::{HoverRequest, InlayHintRequest, Request as _};
+use lsp_types::request::{
+    HoverRequest, InlayHintRequest, Request as _, SemanticTokensFullRequest,
+    SemanticTokensRangeRequest,
+};
 use lsp_types::{
     Hover, HoverContents, HoverProviderCapability, InitializeResult, InlayHint, InlayHintLabel,
-    InlayHintTooltip, MarkupContent, MarkupKind, OneOf, Position, Range, ServerCapabilities,
-    ServerInfo, TextDocumentSyncCapability, TextDocumentSyncKind,
+    InlayHintTooltip, MarkupContent, MarkupKind, OneOf, Position, Range, SemanticToken,
+    SemanticTokenModifier, SemanticTokenType, SemanticTokens, SemanticTokensFullOptions,
+    SemanticTokensLegend, SemanticTokensOptions, SemanticTokensRangeResult, SemanticTokensResult,
+    SemanticTokensServerCapabilities, ServerCapabilities, ServerInfo, TextDocumentSyncCapability,
+    TextDocumentSyncKind,
 };
 use std::collections::HashMap;
 use std::process::ExitCode;
-use ww_lsp_core::{Found, LineIndex};
+use ww_lsp_core::{Found, LineIndex, Token, TokenKind};
 
-/// An open document: the analysis of its last text that parsed, and the index of that text.
+/// An open document: the analysis and the tokens of its last text that parsed, and the index of that text.
 struct Doc {
     index: LineIndex,
     found: Vec<Found>,
+    tokens: Vec<Token>,
 }
 
 impl Doc {
@@ -52,6 +60,14 @@ pub(crate) fn serve(connection: &Connection) -> Result<(), Error> {
         text_document_sync: Some(TextDocumentSyncCapability::Kind(TextDocumentSyncKind::FULL)),
         hover_provider: Some(HoverProviderCapability::Simple(true)),
         inlay_hint_provider: Some(OneOf::Left(true)),
+        semantic_tokens_provider: Some(SemanticTokensServerCapabilities::SemanticTokensOptions(
+            SemanticTokensOptions {
+                legend: legend(),
+                range: Some(true),
+                full: Some(SemanticTokensFullOptions::Bool(true)),
+                work_done_progress_options: lsp_types::WorkDoneProgressOptions::default(),
+            },
+        )),
         ..ServerCapabilities::default()
     };
     let result = InitializeResult {
@@ -110,12 +126,13 @@ fn notified(docs: &mut HashMap<String, Doc>, n: Notification) {
         }
         _ => return,
     };
-    if let Ok(found) = ww_lsp_core::analyze(&text) {
+    if let (Ok(found), Ok(tokens)) = (ww_lsp_core::analyze(&text), ww_lsp_core::tokens(&text)) {
         docs.insert(
             uri,
             Doc {
                 index: LineIndex::new(&text),
                 found,
+                tokens,
             },
         );
     }
@@ -136,6 +153,24 @@ fn answer(docs: &HashMap<String, Doc>, req: Request) -> Response {
                 .get(at.text_document.uri.as_str())
                 .and_then(|doc| hover(doc, at.position));
             serde_json::to_value(hover)
+        }),
+        SemanticTokensFullRequest::METHOD => params::<SemanticTokensFullRequest>(req).map(|p| {
+            let data = docs
+                .get(p.text_document.uri.as_str())
+                .map(|doc| semantic_tokens(doc, None));
+            serde_json::to_value(SemanticTokensResult::Tokens(SemanticTokens {
+                result_id: None,
+                data: data.unwrap_or_default(),
+            }))
+        }),
+        SemanticTokensRangeRequest::METHOD => params::<SemanticTokensRangeRequest>(req).map(|p| {
+            let data = docs
+                .get(p.text_document.uri.as_str())
+                .map(|doc| semantic_tokens(doc, Some(p.range)));
+            serde_json::to_value(SemanticTokensRangeResult::Tokens(SemanticTokens {
+                result_id: None,
+                data: data.unwrap_or_default(),
+            }))
         }),
         _ => {
             return Response::new_err(
@@ -189,6 +224,60 @@ fn hover(doc: &Doc, at: Position) -> Option<Hover> {
         contents: HoverContents::Markup(markdown(&f.hover)),
         range: Some(doc.range(&f.range)),
     })
+}
+
+/// The standard token type of each [TokenKind], in the order of [TokenKind::ALL]: a theme colours them without a
+/// setting of its own.
+fn token_type(kind: TokenKind) -> SemanticTokenType {
+    match kind {
+        TokenKind::ItemMacro => SemanticTokenType::MACRO,
+        TokenKind::AccessMode => SemanticTokenType::KEYWORD,
+        TokenKind::Attribute => SemanticTokenType::DECORATOR,
+        TokenKind::Wrapper => SemanticTokenType::STRUCT,
+        TokenKind::Alias => SemanticTokenType::TYPE,
+        TokenKind::Unit => SemanticTokenType::ENUM_MEMBER,
+        TokenKind::Prefix => SemanticTokenType::NUMBER,
+        TokenKind::Origin => SemanticTokenType::ENUM,
+    }
+}
+
+fn legend() -> SemanticTokensLegend {
+    SemanticTokensLegend {
+        token_types: TokenKind::ALL.into_iter().map(token_type).collect(),
+        // bit 0: a name of exact_units or ww_si, not WireWeaver syntax
+        token_modifiers: vec![SemanticTokenModifier::DEFAULT_LIBRARY],
+    }
+}
+
+/// The tokens that start inside `range` (all without one), relative to the one before as LSP encodes them.
+fn semantic_tokens(doc: &Doc, range: Option<Range>) -> Vec<SemanticToken> {
+    let (from, to) = match range {
+        Some(r) => (doc.offset(r.start), doc.offset(r.end)),
+        None => (0, usize::MAX),
+    };
+    let mut out = vec![];
+    let mut prev = Position::new(0, 0);
+    for t in doc
+        .tokens
+        .iter()
+        .filter(|t| from <= t.range.start && t.range.start < to)
+    {
+        let (start, end) = (doc.pos(t.range.start), doc.pos(t.range.end));
+        out.push(SemanticToken {
+            delta_line: start.line - prev.line,
+            delta_start: if start.line == prev.line {
+                start.character - prev.character
+            } else {
+                start.character
+            },
+            // a token is one identifier, on one line
+            length: end.character - start.character,
+            token_type: t.kind.index(),
+            token_modifiers_bitset: u32::from(t.kind.is_library()),
+        });
+        prev = start;
+    }
+    out
 }
 
 fn markdown(text: &str) -> MarkupContent {
@@ -291,6 +380,86 @@ mod tests {
             json!({ "textDocument": { "uri": uri }, "range": whole }),
         );
         assert_eq!(hints.as_array().unwrap().len(), 1);
+        request(&client, 5, "shutdown", json!(null));
+        notify(&client, "exit", json!(null));
+        thread.join().unwrap();
+    }
+
+    /// Semantic tokens over a whole session: the legend, the full file, a range, and a change that doesn't parse.
+    #[test]
+    fn semantic_tokens_session() {
+        let (server, client) = Connection::memory();
+        let thread = std::thread::spawn(move || serve(&server).unwrap());
+        let init = request(&client, 1, "initialize", json!({ "capabilities": {} }));
+        let provider = &init["capabilities"]["semanticTokensProvider"];
+        assert_eq!(
+            provider["legend"]["tokenTypes"],
+            json!([
+                "macro",
+                "keyword",
+                "decorator",
+                "struct",
+                "type",
+                "enumMember",
+                "number",
+                "enum"
+            ])
+        );
+        assert_eq!(
+            provider["legend"]["tokenModifiers"],
+            json!(["defaultLibrary"])
+        );
+        assert_eq!(provider["range"], json!(true));
+        notify(&client, "initialized", json!({}));
+        let uri = "file:///psu.rs";
+        notify(
+            &client,
+            "textDocument/didOpen",
+            json!({ "textDocument": { "uri": uri, "languageId": "rust", "version": 1, "text": SRC } }),
+        );
+        let full = request(
+            &client,
+            2,
+            "textDocument/semanticTokens/full",
+            json!({ "textDocument": { "uri": uri } }),
+        );
+        // ww_trait at 0:2; property at 2:4; ro at 2:14; Fixed at 2:24; Volt 2:30; Milli 2:36
+        let want = json!([
+            0, 2, 8, 2, 0, //
+            2, 4, 8, 0, 0, //
+            0, 10, 2, 1, 0, //
+            0, 10, 5, 3, 1, //
+            0, 6, 4, 5, 1, //
+            0, 6, 5, 6, 1
+        ]);
+        assert_eq!(full["data"], want);
+        let line2 =
+            json!({ "start": { "line": 2, "character": 0 }, "end": { "line": 3, "character": 0 } });
+        let range = request(
+            &client,
+            3,
+            "textDocument/semanticTokens/range",
+            json!({ "textDocument": { "uri": uri }, "range": line2 }),
+        );
+        assert_eq!(
+            range["data"][0],
+            json!(2),
+            "the first token in the range, from line 0"
+        );
+        assert_eq!(range["data"].as_array().unwrap().len(), 25);
+        // half typed: the tokens of the last text that parsed stay
+        notify(
+            &client,
+            "textDocument/didChange",
+            json!({ "textDocument": { "uri": uri, "version": 2 }, "contentChanges": [{ "text": "#[ww_trait]\ntrait Psu {" }] }),
+        );
+        let full = request(
+            &client,
+            4,
+            "textDocument/semanticTokens/full",
+            json!({ "textDocument": { "uri": uri } }),
+        );
+        assert_eq!(full["data"], want);
         request(&client, 5, "shutdown", json!(null));
         notify(&client, "exit", json!(null));
         thread.join().unwrap();

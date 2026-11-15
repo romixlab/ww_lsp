@@ -1,0 +1,6 @@
+24:84  °C  (property t)
+24:97  ms · u32  (property t)
+26:72  °  (property heading)
+28:33  Q15 V · −1..1 V  (property gain)
+32:35  KiB · u16 · 0..67107840 B  (sink firmware)
+36:57  V/s · u32  (fn set_slew)

@@ -30,8 +30,9 @@ Cargo workspace, edition 2024, one shared version (`[workspace.package]`), depen
     - `src/parse.rs` — finds the API traits and their items with `syn` (`full`, `visit`), and the types in them.
     - `src/describe.rs` — what an exact_units type stands for: `Fixed`, `Point`, the aliases, units, scales, storages, bounds, origins. Every name, symbol and number comes from exact_units (`units::by_name`, `Prefix::from_name`, `origins::ALL`, `types::ALIASES`, the `Storage` / `FixedScale` consts); this file only lists the storage types.
     - `src/format.rs` — the hint and hover text.
+    - `src/names.rs`, `src/tokens.rs` — the WireWeaver words of a source for semantic highlighting, the exact_units names from its tables.
     - `src/line_index.rs` — byte offsets to lines and UTF-16 columns and back.
-    - `tests/golden.rs`, `tests/fixtures/` — fixture APIs with their golden hints (`.hints`) and hovers (`.hover`).
+    - `tests/golden.rs`, `tests/fixtures/` — fixture APIs with their golden hints (`.hints`), hovers (`.hover`) and semantic tokens (`.tokens`).
 - `crates/ww_lsp/` — the binary: `serve` (`src/server.rs`, `lsp-server` + `lsp-types`), `hints` and `hover` (`src/output.rs`), completion (`src/complete.rs`), the usage record (`src/usage.rs`), `build.rs` for `--version`.
 - `editors/zed/` — the Zed extension (LSP-7), a workspace of its own outside the root one: it builds only for `wasm32-wasip2`, with its own version and `Cargo.lock`. `zed_extension_api` brings its own duplicate build dependencies (`hashbrown`), left as they are.
 - `editors/vscode/` — the VS Code extension (LSP-8), one JavaScript file because VS Code extensions run on JavaScript, with its own version.

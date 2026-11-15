@@ -18,7 +18,7 @@ The single source of truth for what ww_lsp does, what is being worked on and wha
 - ✅ **PAR-1 API traits**: `#[ww_trait]` and `#[ww_api_root]` traits anywhere in a file, in modules too (`crates/ww_lsp_core/src/parse.rs`).
 - ✅ **PAR-2 Items and their types**: `property!(ro+observe+batched name: T)`, `property!(rw name: T, E)`, `stream!`, `sink!`, `method!` and trait methods (arguments and return type); inside a type that isn't an exact_units one, its arguments (`Option<Millis<u32>>`, `Result<Fixed<..>, E>`).
 - ✅ **PAR-3 Local aliases**: non-generic `type X = ..;` items of the same file are looked through (`type Heatsink = Point<Celsius, ..>`).
-- 🚧 **PAR-4 A file that doesn't parse**: syn needs the whole file to parse; while it doesn't (in the middle of typing), the server keeps the hints of the last text that did, at their old positions. 📋 An error-tolerant parse (ra_ap_syntax) keeps them in place.
+- 🚧 **PAR-4 A file that doesn't parse**: syn needs the whole file to parse; while it doesn't (in the middle of typing), the server keeps the hints and semantic tokens of the last text that did, at their old positions. 📋 An error-tolerant parse (ra_ap_syntax) keeps them in place.
 - 📋 **PAR-5 Reuse wire_weaver's crate walker**: it already reads ww_trait items and resolves their types across crates and `use` paths; ww_lsp names a type by its last path segment and knows only the file it sees. Types from other files and crates (an `api` crate's own aliases and unit markers) need the walker.
 
 ## Inlay hints (`HINT`)
@@ -48,6 +48,7 @@ The single source of truth for what ww_lsp does, what is being worked on and wha
 - 📋 **LSP-5 Shared plumbing with napier_lang**: one LSP base (document store, line index, request loop) for ww_lsp and napier_lang's server.
 - 💡 **LSP-6 Incremental sync**: full sync is fine for API files of a few hundred lines.
 - ✅ **LSP-7 Zed extension**: Zed starts only servers an extension registers; `editors/zed` runs `ww_lsp serve` for Rust from PATH or `lsp.ww_lsp.binary`, `just install-zed` installs it. Not in Zed's registry. No automated test yet.
+- ✅ **LSP-9 Semantic tokens for WireWeaver syntax**: `textDocument/semanticTokens/full` and `/range` mark item macros (`property!`, `method!`, `stream!`, `sink!`), access modes (`ro`, `rw`, `wo`, `observe`, `batched`), WireWeaver attributes, and exact_units' wrappers, aliases, units, prefixes and origins in types. Standard token types, so themes colour them without setup: macro, keyword, decorator, struct (wrapper), type (alias), enumMember (unit), number (prefix), enum (origin); exact_units' and `ww_si`'s names carry `defaultLibrary`. Units, prefixes and origins only inside an exact_units type's arguments, and never a name the file declares a type of its own for. Every exact_units name comes from its tables (`crates/ww_lsp_core/src/names.rs`); a file that doesn't parse keeps the tokens of the last text that did (PAR-4). Tests: `.tokens` golden files, `semantic_tokens_session` in `server.rs`.
 - ✅ **LSP-8 Editor configs**: ready-made setup in `editors/` for Neovim, Helix, Kakoune, Emacs (lsp-mode), VS Code and JetBrains (LSP4IJ). Neovim 0.11+ and VS Code were run by hand and returned hints. The rest are not run yet: Neovim 0.10, Helix, Kakoune, Emacs and JetBrains. No automated test yet.
 
 ## CLI (`CLI`)

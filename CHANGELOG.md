@@ -16,6 +16,7 @@ All notable changes to ww_lsp. The format follows [Keep a Changelog](https://kee
 
 - Hints for every alias and origin in exact_units' tables: `Ppm`, `PhaseBam16`, `Count`, `Bytes<T, B>`, `Angle<U>`, the time-scale epochs (HINT-9).
 - Hints for every unit group of exact_units but the customary units: mol, lx, Bq, counted items and the rest (HINT-6).
+- Semantic tokens for WireWeaver syntax: item macros, access modes, attributes and exact_units names, in standard token types (LSP-9).
 
 ### Changed
 

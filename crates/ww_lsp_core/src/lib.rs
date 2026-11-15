@@ -1,7 +1,8 @@
 //! The analysis behind `ww_lsp`: finds the WireWeaver API items of a Rust source (`#[ww_trait]` and
 //! `#[ww_api_root]` traits, their `property!`, `stream!`, `sink!` and `method!` items and their methods), and for each
-//! exact_units type in them the text of an inlay hint and of a hover. No LSP types here: positions are byte offsets,
-//! [LineIndex] turns them into lines and UTF-16 columns.
+//! exact_units type in them the text of an inlay hint and of a hover; and the WireWeaver words of a source for
+//! semantic highlighting ([tokens()], [names()]). No LSP types here: positions are byte offsets, [LineIndex] turns them
+//! into lines and UTF-16 columns.
 //!
 //! ```
 //! let src = "#[ww_trait]\ntrait Psu {\n    property!(ro v_out: Fixed<Volt, Milli, i16>);\n}\n";
@@ -13,11 +14,15 @@
 pub mod describe;
 pub mod format;
 mod line_index;
+pub mod names;
 mod parse;
+mod tokens;
 
 pub use describe::Desc;
 pub use line_index::LineIndex;
+pub use names::{Names, TokenKind, names};
 use std::ops::Range;
+pub use tokens::{Token, tokens};
 
 /// An exact_units type in an API item.
 #[derive(Debug, Clone)]

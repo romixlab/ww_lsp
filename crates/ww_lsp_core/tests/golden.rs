@@ -1,6 +1,6 @@
-//! The hints and hovers of the fixtures against their golden files: `fixtures/NAME.rs` beside `NAME.hints` (one
-//! line per hint, `LINE:COL  HINT  (ITEM)`, 1-based, at the end of the type) and `NAME.hover` (every hover, in
-//! source order). `UPDATE_GOLDEN=1 cargo nextest run` writes them anew; review the diff before committing.
+//! The hints, hovers and semantic tokens of the fixtures against their golden files: `fixtures/NAME.rs` beside
+//! `NAME.hints` (one line per hint, `LINE:COL  HINT  (ITEM)`, 1-based, at the end of the type), `NAME.hover` (every
+//! hover, in source order) and `NAME.tokens` (one line per token, `LINE:COL  KIND  TEXT`, 1-based, at its start). `UPDATE_GOLDEN=1 cargo nextest run` writes them anew; review the diff before committing.
 
 use std::fmt::Write as _;
 use std::path::Path;
@@ -17,7 +17,20 @@ fn check(name: &str) {
         writeln!(hints, "{}:{}  {}  ({})", line + 1, col + 1, f.hint, f.item).unwrap();
         writeln!(hovers, "<!-- {} -->\n{}", f.item, f.hover).unwrap();
     }
-    for (ext, got) in [("hints", hints), ("hover", hovers)] {
+    let mut tokens = String::new();
+    for t in ww_lsp_core::tokens(&src).unwrap() {
+        let (line, col) = index.position(t.range.start);
+        writeln!(
+            tokens,
+            "{}:{}  {:?}  {}",
+            line + 1,
+            col + 1,
+            t.kind,
+            &src[t.range]
+        )
+        .unwrap();
+    }
+    for (ext, got) in [("hints", hints), ("hover", hovers), ("tokens", tokens)] {
         let path = dir.join(format!("{name}.{ext}"));
         if std::env::var_os("UPDATE_GOLDEN").is_some() {
             std::fs::write(&path, &got).unwrap();
@@ -36,6 +49,11 @@ fn check(name: &str) {
 #[test]
 fn psu_api() {
     check("psu_api");
+}
+
+#[test]
+fn sensor_api() {
+    check("sensor_api");
 }
 
 #[test]
@@ -129,4 +147,46 @@ fn all_unit_groups() {
             "item · u16 · 0..65535 item",
         ]
     );
+}
+
+/// The names come from exact_units' tables, each of one kind, so a type's name has one meaning.
+#[test]
+fn names_from_exact_units_one_kind_each() {
+    use ww_lsp_core::TokenKind;
+    let names = ww_lsp_core::names();
+    for (name, kind) in [
+        ("Volt", TokenKind::Unit),
+        ("Per", TokenKind::Unit),
+        ("Milli", TokenKind::Prefix),
+        ("One", TokenKind::Prefix),
+        ("Kibi", TokenKind::Prefix),
+        ("Celsius", TokenKind::Origin),
+        ("Fixed", TokenKind::Wrapper),
+        ("Timed", TokenKind::Wrapper),
+        ("Millis", TokenKind::Alias),
+    ] {
+        assert_eq!(names.type_kind(name), Some(kind), "{name}");
+    }
+    assert_eq!(
+        names.type_kind("Unit"),
+        None,
+        "the run-time prefix's name is no marker"
+    );
+    for (i, kind) in TokenKind::ALL.into_iter().enumerate() {
+        assert_eq!(kind.index() as usize, i, "{kind:?}");
+    }
+    let kinds = [
+        TokenKind::Wrapper,
+        TokenKind::Alias,
+        TokenKind::Origin,
+        TokenKind::Unit,
+        TokenKind::Prefix,
+    ];
+    for a in kinds {
+        for b in kinds.into_iter().filter(|b| *b != a) {
+            for name in names.of(a) {
+                assert!(!names.of(b).contains(name), "{name} is {a:?} and {b:?}");
+            }
+        }
+    }
 }

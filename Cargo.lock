@@ -157,7 +157,7 @@ checksum = "a31eee39dddec8330830986fcd7625edb5a24ec90ea038215273bbc3adb08ac6"
 [[package]]
 name = "exact_units"
 version = "0.1.0"
-source = "git+https://github.com/romixlab/exact_units#f17f9770179704bbbd33989f4b249625fc4e9828"
+source = "git+https://github.com/romixlab/exact_units#db61a10385883b5d542dbe332a2fda964b8c4d5a"
 
 [[package]]
 name = "fluent-uri"

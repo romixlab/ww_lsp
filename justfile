@@ -7,8 +7,8 @@ default:
 # plain `just test` is the full run CI does
 test *flags:
     if [ "{{flags}}" = "--changed" ]; then \
-        if command -v changed-tests >/dev/null; then f=$(changed-tests) && if [ -n "$f" ]; then cargo nextest run --workspace -E "$f"; fi; \
-        else echo "changed-tests not found; running the full test suite instead" >&2; {{just_executable()}} test-all; fi; \
+        if command -v changedtests >/dev/null; then f=$(changedtests) && if [ -n "$f" ]; then cargo nextest run --workspace -E "$f"; fi; \
+        else echo "changedtests not found; running the full test suite instead" >&2; {{just_executable()}} test-all; fi; \
     else {{just_executable()}} test-all {{flags}}; fi
 
 # Every test through nextest, then the doctests (nextest doesn't run them). `UPDATE_GOLDEN=1 just test` writes the

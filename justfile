@@ -6,10 +6,7 @@ default:
 # The tests. `just test --changed`: only the crates changed against main and their dependents;
 # plain `just test` is the full run CI does
 test *flags:
-    if [ "{{flags}}" = "--changed" ]; then \
-        if command -v changedtests >/dev/null; then f=$(changedtests) && if [ -n "$f" ]; then cargo nextest run --workspace -E "$f"; fi; \
-        else echo "changedtests not found; running the full test suite instead" >&2; {{just_executable()}} test-all; fi; \
-    else {{just_executable()}} test-all {{flags}}; fi
+    {{ if flags == "--changed" { "changedtests run" } else { just_executable() + " test-all " + flags } }}
 
 # Every test through nextest, then the doctests (nextest doesn't run them). `UPDATE_GOLDEN=1 just test` writes the
 # golden files of crates/ww_lsp_core/tests/fixtures anew: review the diff

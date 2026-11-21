@@ -32,6 +32,7 @@ anstream = { version = "0.6", default-features = false, features = ["auto"] }
 anstyle = { version = "1", default-features = false, features = ["std"] }
 
 [profile.dev]
+debug = false
 split-debuginfo = "unpacked"
 
 [profile.test]
